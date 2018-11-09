@@ -6,20 +6,20 @@ class NN():
         self.weights=[np.random.randn(y,x) for x,y in zip(sizeOfNeuralNetwork[:-1],sizeOfNeuralNetwork[1:])]
         self.biases=[np.random.randn(y,1) for y in sizeOfNeuralNetwork[1:]]
         self.alpha=alpha
-    def run(self,trainingData,trainingResults):
-        n=len(trainingData)
+    def run(self,trainingData):
         epochs=25
         for j in range(epochs):
-            dBiases,dWeights=self.full(trainingData,trainingResults)
-            self.weights=[weight-alpha*dWeight/m for weight,dWeight in zip(self.weights,dWeights)]
-            self.biases=[bias-alpha*dBias/m for weight,dBias in zip(self.biases,dBiases)]
-    def full(self,trainingData,trainingResults):
+            for x,y in trainingData:
+                dBiases,dWeights=self.full(x,y)
+                self.weights=[weight-alpha*dWeight/m for weight,dWeight in zip(self.weights,dWeights)]
+                self.biases=[bias-alpha*dBias/m for weight,dBias in zip(self.biases,dBiases)]
+    def full(self,x,y):
         dBiases = [np.zeros(b.shape) for b in self.biases]
         dWeights =[np.zeros(w.shape) for w in self.weights]
-        Z,Activation=self.forward(trainingData)
-        A=Activation[self.size-1].shape
+        Z,Activation=self.forward(x)
+        A=Activation[self.size-1]
         print(Activation[self.size-1].shape)
-        print(self.loss(A,trainingResults).shape)
+        print(self.loss(A,y))
         dThisBiases,dThisWeights=self.backprop(A,Z,Activation)
         dBiases=[currentdBias+dBias for currentdBias,dBias in zip(dBiases,dThisBiases)]
         dWeights=[currentdWeight+dWeight for currentdWeight,dWeight in zip(dweights,dThisWeights)]
@@ -40,14 +40,15 @@ class NN():
         return Z,Activation
     def sigmoid(self,Z):
         return 1/(1+np.exp(-Z))
-    def backprop(A,Z,Activation):
+    """def backprop(A,Z,Activation,Y):
         dBiases=[]
         dWeights=[]
-        dA_prev = - (np.divide(Y, Y_hat) - np.divide(1 - Y, 1 - Y_hat));
+        dA_prev = - (np.divide(Y,A) - np.divide(1 - Y, 1 - A));
         for i in range(1,self.size):
             dBiases.append(dA)
             dZ=dA*sigmoidPrime(Z[self.size-1-i])
             dWeights=
+"""
 
 
 
@@ -55,8 +56,7 @@ class NN():
 
 
 
-
-trainingData,trainingResults,validationData,validationResults,testingData,testingResults=prepare.load_data_wrapper()
+trainingData,validationData,testingData=prepare.load_data_wrapper()
 mnist=NN([784,30,10],0.1)
-mnist.run(trainingData,trainingResults)
+mnist.run(trainingData)
 
