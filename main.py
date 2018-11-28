@@ -1,4 +1,6 @@
 import numpy as np
+import itertools
+import matplotlib.pyplot as plt
 import prepare
 class NN():
     def __init__(self,sizeOfNeuralNetwork):
@@ -10,12 +12,18 @@ class NN():
         m_test=len(testingData)# No of examples in testing data
         self.alpha=alpha# Training rate
         epochs=25
+        trainingResults=[]
+        testingResults=[]
         for i in range(epochs):
             np.random.shuffle(trainingData)#Shuffling training data
             batches=[trainingData[k:k+batchSize] for k in range(0,m,batchSize)]
             for batch in batches:
                 self.run_batch(batch)#Updating values for each batch
+            trainingResults.append(self.trainingLoss(trainingData)/m)
+            testingResults.append(self.evaluate(testingData)/m_test)
             print("Epoch",i,"Value:",self.evaluate(testingData),"/",m_test)
+        print(trainingResults)
+        return trainingResults,testingResults
     def run_batch(self,batch):
         m=len(batch)#No of examples in each batch
         dWeights=[np.zeros(weight.shape) for weight in self.weights]#Initializing the update of weights to 0
@@ -40,9 +48,12 @@ class NN():
         return dWeightsInter,dBiasesInter
     def sigmoidPrime(self,A):
         return A*(1-A)
+    def trainingLoss(self,trainingData):
+        training_results=[(int(np.argmax(self.forwardPass(x)[-1])),int(np.argmax(y))) for x,y in trainingData]
+        return sum(int(x!=y) for x,y in training_results)
     def evaluate(self,testingData):
         test_results=[(int(np.argmax(self.forwardPass(x)[-1])),y) for x,y in testingData]
-        return sum(int(x==y) for x,y in test_results)
+        return sum(int(x!=y) for x,y in test_results)
     def forwardPass(self,x):
         activations=[x]
         lastActivation=x#First activation is the example data
@@ -58,7 +69,25 @@ trainingData,validationData,testingData=prepare.load_data_wrapper()
 trainingData=list(trainingData)
 validationData=list(validationData)
 testingData=list(testingData)
-mnist=NN([784,30,10])#setting the layer number
-mnist.run(trainingData,validationData,3,10)#fit and test
-
+trainingResults=[]
+testingResults=[]
+colors=itertools.cycle(['b','g','r','c','m','k'])
+for i in range(0,3):
+    layers=[784]
+    for j in range(i):
+        layers.append(30)
+    layers.append(10)
+    print(layers)
+    mnist=NN(layers)#setting the layer number
+    a,b=mnist.run(trainingData,validationData,3,10)#fit and test
+    trainingResults.append(a)
+    testingResults.append(b)
+for i in range(3):
+    plt.plot(trainingResults[i],next(colors),label=str("trainingResults "+str(i)))
+plt.legend()
+plt.show()
+for i in range(3):
+    plt.plot(testingResults[i],next(colors),label=str("testingResults "+str(i)))
+plt.legend()
+plt.show()
 
